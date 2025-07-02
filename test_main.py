@@ -135,6 +135,43 @@ class TestCSVReading(unittest.TestCase):
         with self.assertRaises(ValueError):
             read_sales_from_csv_file("dummy/path/sales.csv")
 
+# Test cases for revenue calculations
+
+class TestRevenueCalculation(unittest.TestCase):
+    # Test revenue for one sale
+    def test_revenue_per_sale(self):
+        # Arrange
+        book = Book(12345, "Sample Book", "Paperback", "Author A", "Fiction", 10.00)
+        sale = Sale("2023-06-01", 12345, "Shop A", 3)
+
+        # Act
+        revenue = sale.quantity * book.unit_price
+
+        # Assert
+        self.assertEqual(revenue, 30.00)
+
+    # Test grouping revenue by shop
+    def test_grouping_by_shop(self):
+        # Arrange
+        book1 = Book(12345, "Book One", "Paperback", "Author A", "Fiction", 15.00)
+        book2 = Book(67890, "Book Two", "Hardback", "Author B", "Non-fiction", 25.00)
+        sale1 = Sale("2023-06-01", 12345, "Shop A", 2)
+        sale2 = Sale("2023-06-02", 67890, "Shop A", 1)
+        books_lookup = {book1.ISBN: book1, book2.ISBN: book2}
+
+        # Act
+        shop_totals = {}
+        for sale in [sale1, sale2]:
+            book = books_lookup.get(sale.ISBN)
+            revenue = sale.quantity * book.unit_price
+            if sale.seller not in shop_totals:
+                shop_totals[sale.seller] = {"units": 0, "revenue": 0.0}
+            shop_totals[sale.seller]["units"] += sale.quantity
+            shop_totals[sale.seller]["revenue"] += revenue
+
+        # Assert
+        self.assertEqual(shop_totals["Shop A"]["units"], 3)
+        self.assertEqual(shop_totals["Shop A"]["revenue"], 55.00)
 
 if __name__ == "__main__":
     unittest.main()
